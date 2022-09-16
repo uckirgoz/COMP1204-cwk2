@@ -1,0 +1,227 @@
+\documentclass[12pt]{extarticle}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+
+\begin{document}
+    \begin{titlepage}
+    \begin{center}
+        \textbf {Data Management}
+    
+        \vspace{0.2cm}
+        Coursework 2
+    
+        \vspace{2cm}
+        \textbf{Berke Galadari}
+    
+        \vspace{0.2cm}
+        bg4u17 | 29543371
+
+    \end{center}
+\end{titlepage}
+
+\section{The Relational Model}
+    \vspace{0.4cm}
+    \subsection{EX1}
+    \vspace{0.2cm}
+    \\\underline{\textbf{Relation}}
+    \\(varchar: dateRep, int: day, int: month, int: year, int: cases, int: deaths, varchar: countriesAndTerritories, varchar: geoId, varchar: countryterritoryCode, varchar: popData2018, varchar: continentExp)
+    
+    \vspace{0.4cm}
+    \subsection{EX2}
+    \vspace{0.2cm}
+    \textbf{countriesAndTerritories} \to geoId, countryterritoryCode, popData2018, continentExp
+    \\\textbf{geoId} \to countriesAndTerritories, countryterritoryCode, popData2018, continentExp
+    \\\textbf{dateRep} \to day, month, year
+    \\\textbf{dateRep, countriesAndTerritories, geoId} \to day, month, year, cases, deaths, \\countryterritoryCode, popData2018, continentExp
+    \newline 
+    
+    Assumed that the attributes "countryterritoryCode" and "popData2018" may take a null value, or may not be accurate in determining unique elements.
+    
+    \vspace{0.4cm} 
+    \subsection{EX3}
+    \vspace{0.2cm}
+    \\(dateRep, geoId)
+    \\(dateRep, countriesAndTerritories)
+    \\\\(day, month, year) can be used instead of (dateRep) in all of the above. Even (day, month) can be used for the time being but would be unusable once one year anniversary of COVID-19 comes.
+    
+    \vspace{1cm}
+    \subsection{EX4}
+    \vspace{0.2cm}
+    \\\\\textbf{dateRep, geoId} \to day, month, year, cases, deaths, \\countriesAndTerritories,countryTerritoryCode, popData2018, continentExp
+\vspace{1cm}
+\section{Normalisation}
+    \vspace{0.4cm}
+    \subsection{EX5 AND EX6}
+    \vspace{0.4cm}
+    \underline{\textbf{Partial-Key Dependencies}}
+    \\\\\textbf{dateRep} \to day, month, year
+    \\\textbf{countriesAndTerritories} \to countryterritoryCode,popData2018,continentExp
+    \\\textbf{geoId} \to countryterritoryCode,popData2018,continentExp
+    \newline
+    
+    \textbf{First, decompose original table into two separate tables.}
+    \\\textbf{1.}(varchar: dateRep, int: day, int: month, int: year, varchar: geoId, \\int: cases, int: deaths)
+    \\\\\textbf{2.}(varchar: geoId, varchar: countriesAndTerritories, \\varchar: countryterritoryCode, varchar: popData2018, \\varchar: continentExp)
+    \\\\\textbf{Then decompose (1.) further into:}
+    \\\textbf{3.}(varchar: dateRep, varchar: geoId, int: day, int: month, int: year)
+    \\\textbf{4.}(varchar: dateRep, varchar: geoId, int: cases, int: deaths)
+    
+    \vspace{1.4cm}
+    \subsection{EX7 AND EX8}
+    \vspace{0.4cm}
+    \underline{\textbf{Transitive Dependencies}}
+    \\\\\textbf{geoId} \to \textbf{countriesAndTerritories} \to countryterritoryCode, popData2018,continentExp
+    \\\textbf{countriesAndTerritories} \to \textbf{geoId} \to countryterritoryCode, popData2018,continentExp
+    \newline
+    
+    \textbf{Decompose table(2.) from EX5 and EX6 into:}
+    \\\textbf{5.}(varchar: geoId, varchar: countriesAndTerritories)
+    \\\textbf{6.}(varchar: countriesAndTerritories, varchar: countryterritoryCode, varchar: popData2018, varchar: continentExp)
+    
+    
+    \vspace{0.4cm}
+    \subsection{EX9}
+    \vspace{0.4cm}
+    Yes, this relation is in BCNF. This is because there is only one candidate key in relation. TEKRAR KONTROL ET
+    
+\vspace{1cm}
+\section{Modelling}
+    \vspace{0.4cm}
+    \subsection{EX10}
+    The csv dataset was imported into a table called dataset in coronavirus.db.
+    
+    
+    \subsection{EX11}
+    \lstset{language=SQL}
+    \begin{lstlisting}
+        -- Table: R1
+    CREATE TABLE R1(
+        dateRep VARCHAR,
+        geoId VARCHAR,
+        day INT,
+        month INT,
+        year INT,
+        PRIMARY KEY (dateRep,geoId),
+        FOREIGN KEY (dateRep,geoId)
+            REFERENCES R2 (dateRep,geoId)
+    );
+    
+    -- Table: R2
+    CREATE TABLE R2(
+        dateRep VARCHAR,
+        geoId VARCHAR,
+        cases INT,
+        deaths INT,
+        PRIMARY KEY (dateRep,geoId),
+        FOREIGN KEY (geoId)
+            REFERENCES R3 (geoId)
+    );
+    
+    -- Table: R3
+    CREATE TABLE R3(
+        geoId VARCHAR,
+        countriesAndTerritories VARHCAR,
+        PRIMARY KEY (geoId),
+        FOREIGN KEY (countriesAndTerritories)
+            REFERENCES R4(countriesAndTerritories)
+    );
+    
+    -- Table: R4
+    CREATE TABLE R4(
+        countriesAndTerritories VARCHAR,
+        countryterritoryCode VARCHAR,
+        popData2018 VARCHAR,
+        continentExp VARCHAR,
+        PRIMARY KEY (countriesAndTerritories)
+    );
+    \end{lstlisting}
+    \vspace{1.6cm}
+    \subsection{EX12}
+    \lstset{language=SQL}
+    \begin{lstlisting}
+    INSERT INTO R1 (dateRep,geoId,day,month,year)
+    SELECT DISTINCT dateRep,geoId,day,month,year FROM dataset;
+    
+    INSERT INTO R2 (dateRep,geoId,cases,deaths)
+    SELECT DISTINCT dateRep,geoId,cases,deaths FROM dataset;
+    
+    INSERT INTO R3 (geoId,countriesAndTerritories)
+    SELECT DISTINCT geoId,countriesAndTerritories FROM dataset;
+    
+    INSERT INTO R4 (countriesAndTerritories,countryterritoryCode,
+    popData2018,continentExp)
+    SELECT DISTINCT countriesAndTerritories,countryterritoryCode,
+    popData2018,continentExp FROM dataset;
+    \end{lstlisting}
+    
+    \vspace{0.4cm}
+    \subsection{EX13}
+    Tested on clean SQLite database, database was populated successfully.
+    
+\vspace{0.4cm}
+\section{Querying}
+    \vspace{0.4cm}
+    \subsection{EX14}
+    \lstset{language=SQL}
+    \begin{lstlisting}
+    SELECT SUM(cases),SUM(deaths) FROM R2;
+    \end{lstlisting}
+    
+    \vspace{0.4cm}
+    \subsection{EX15}
+    \lstset{language=SQL}
+    \begin{lstlisting}
+    SELECT dateRep,cases FROM dataset
+    WHERE geoId = 'UK'
+    ORDER BY year,month,dateRep;
+    \end{lstlisting}
+    
+    \vspace{1.7cm}
+    \subsection{EX16}
+    \lstset{language=SQL}
+    \begin{lstlisting}
+    SELECT dateRep,continentExp,SUM(cases) totalCases, 
+    SUM(deaths) totalDeaths FROM dataset 
+    GROUP BY dateRep,continentExp
+    ORDER BY continentExp,year,month,dateRep;
+    \end{lstlisting}
+    
+    \vspace{0.4cm}
+    \subsection{EX17}
+    \lstset{language=SQL}
+    \begin{lstlisting}
+    SELECT countriesAndTerritories,
+    SUM(cases)*100/popData2018 populationPercentageCases, 
+    SUM(deaths)*100/popData2018 populationPercentageDeaths 
+    FROM dataset
+    GROUP BY countriesAndTerritories;
+    \end{lstlisting}
+    
+    \vspace{0.4cm}
+    \subsection{EX18}
+    \lstset{language=SQL}
+    \begin{lstlisting}
+    SELECT countriesAndTerritories,
+    SUM(deaths)*100/SUM(cases) deathPercentageForTotalCases 
+    FROM dataset
+    GROUP BY countriesAndTerritories
+    ORDER BY deathPercentageForTotalCases DESC LIMIT 10;
+    \end{lstlisting}
+    
+    \vspace{0.4cm}
+    \subsection{EX19}
+    \lstset{language=SQL}
+    \begin{lstlisting}
+    SELECT dateRep,SUM(cases) OVER 
+    (ORDER BY year,month,dateRep 
+    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW),
+    SUM(deaths) OVER 
+    (ORDER BY year,month,dateRep 
+    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+    FROM dataset
+    WHERE geoId = 'UK'
+    GROUP BY dateRep
+    ORDER BY year,month,dateRep;
+    \end{lstlisting}
+
+\end{document}
